@@ -6,6 +6,9 @@
 #include <vector>
 #include <queue>
 #include <list>
+#include <stack>
+
+using namespace std;
 
 class Grafo {
     public:
@@ -13,11 +16,16 @@ class Grafo {
         ~Grafo();
         void adicionarAresta(int origem, int destino);
         int definirCapital();
+        int kosaraju();
         void imprimirListaAdj();
     private:
-        int num_vertices;
-        std::vector<std::list<int>> lista_adj;
         int bfs(int origem);
+        void dfs_padrao(vector<list<int>> &grafo, int vertice, vector<bool> &visitados, stack<int> &pilha);
+        void dfs_transposto(vector<list<int>> &grafo, int vertice, vector<bool> &visitados);
+        vector<list<int>> grafo_transposto();
+
+        int num_vertices;
+        vector<list<int>> lista_adj;
 };
 
 #endif

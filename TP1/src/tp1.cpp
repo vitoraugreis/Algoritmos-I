@@ -33,4 +33,5 @@ int main() {
     }
 
     cout << centros_urbanos[grafo.definirCapital()] << endl;
+    cout << grafo.kosaraju() << endl;
 }
