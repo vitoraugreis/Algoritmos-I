@@ -15,8 +15,7 @@ int main() {
     cin >> qntd_centros_urbanos >> qntd_estradas;
 
     Grafo grafo(qntd_centros_urbanos);
-    centros_urbanos.resize(qntd_centros_urbanos);
-
+    
     for (int i = 0; i<qntd_estradas; i++) {
         string centro_origem, centro_destino;
         cin >> centro_origem >> centro_destino;
@@ -32,4 +31,6 @@ int main() {
         }
         grafo.adicionarAresta(mapa[centro_origem], mapa[centro_destino]);
     }
+
+    cout << centros_urbanos[grafo.definirCapital()] << endl;
 }

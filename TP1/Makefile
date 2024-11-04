@@ -30,7 +30,7 @@ all: $(TARGET)
 
 run: $(TARGET)
 	clear
-	./$(TARGET)
+	./$(TARGET) < testCase.txt
 
 clear:
 	rm $(OBJ_DIR)/* tp1
