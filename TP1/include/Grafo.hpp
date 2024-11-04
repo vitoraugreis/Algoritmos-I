@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <queue>
+#include <list>
 
 class Grafo {
     public:
@@ -12,10 +13,10 @@ class Grafo {
         ~Grafo();
         void adicionarAresta(int origem, int destino);
         int definirCapital();
-        void imprimirMatrizAdj();
+        void imprimirListaAdj();
     private:
-        int** matriz_adj;
         int num_vertices;
+        std::vector<std::list<int>> lista_adj;
         int bfs(int origem);
 };
 
