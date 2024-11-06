@@ -9,58 +9,50 @@ void Grafo::adicionarAresta(int origem, int destino) {
     lista_adj[origem].push_back(destino);
 }
 
-int Grafo::definirCapital() {
-    vector<pair<int,int>> candidatas;
-    int qntd_candidatas = 0;
+void Grafo::definirCapital() {
+    int distancia_total = -1;
+    distancias_ate_capital = vector<int>(num_vertices, 0);
 
     for (int i = 0; i<this->num_vertices; i++) {
-        int distancia_total = this->bfs(i);
-        if (distancia_total) {
-            candidatas.push_back(make_pair(distancia_total, i));
-            qntd_candidatas++;
-        }
+        bfs(i, &distancia_total);
     }
-
-    int id_capital = 0;
-    for (int i = 1; i<qntd_candidatas; i++) {
-        if (candidatas[i].first < candidatas[id_capital].first) {
-            id_capital = i;
-        }
-    }
-
-    return candidatas[id_capital].second;
 }
 
-int Grafo::bfs(int origem) {
-    queue<int> fila;
+void Grafo::bfs(int origem, int* distancia_total) {
+    queue<pair<int, int>> fila;
     vector<bool> visitados(this->num_vertices, false);
     vector<int> distancia(this->num_vertices, 0);
-    int distancia_atual = 1;
-    int distancia_total = 0;
 
     visitados[origem] = true;
-    fila.push(origem);
+    fila.push(make_pair(origem, 0));
 
     while (!fila.empty()) {
-        int vertice_atual = fila.front();
+        int vertice_atual = fila.front().first;
+        int distancia_atual = fila.front().second;
         fila.pop();
 
         for (int i : lista_adj[vertice_atual]) {
             if (!visitados[i]) {
                 visitados[i] = true;
-                distancia[i] = distancia_atual;
-                fila.push(i);
+                distancia[i] = distancia_atual+1;
+                fila.push(make_pair(i, distancia_atual+1));
             }
-            distancia_atual++;
         }
+        distancia_atual++;
     }
     
+    int total = 0;
     for (int i = 0; i<this->num_vertices; i++) {
-        if (visitados[i] == false) { return 0; }
-        else { distancia_total += distancia[i]; }
+        if (visitados[i] == false) { return; }
+        else { total += distancia[i]; }
     }
 
-    return distancia_total;
+    if (total < *distancia_total || *distancia_total == -1) {
+        *distancia_total = total;
+        distancias_ate_capital = distancia;
+        capital = origem;
+    }
+    return;
 }
 
 void Grafo::dfs_padrao(vector<list<int>> &grafo, int vertice, vector<bool> &visitados, stack<int> &pilha) {
@@ -110,6 +102,14 @@ int Grafo::kosaraju() {
         }
     }
     return cfc;
+}
+
+int Grafo::getCapital() {
+    return capital;
+}
+
+vector<int> Grafo::getDistanciasAteCapital() {
+    return distancias_ate_capital;
 }
 
 void Grafo::imprimirListaAdj() {

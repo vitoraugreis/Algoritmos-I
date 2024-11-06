@@ -32,6 +32,13 @@ int main() {
         grafo.adicionarAresta(mapa[centro_origem], mapa[centro_destino]);
     }
 
-    cout << centros_urbanos[grafo.definirCapital()] << endl;
-    cout << grafo.kosaraju() << endl;
+    grafo.definirCapital();
+
+    cout << centros_urbanos[grafo.getCapital()] << endl;
+    vector<int> v = grafo.getDistanciasAteCapital();
+    for (int i = 0; i<qntd_centros_urbanos; i++) {
+        cout << centros_urbanos[i] << ": " << v[i] << endl;
+    }
+    
+    //cout << grafo.kosaraju() << endl;
 }
