@@ -33,12 +33,12 @@ int main() {
     }
 
     grafo.definirCapital();
-
     cout << centros_urbanos[grafo.getCapital()] << endl;
-    vector<int> v = grafo.getDistanciasAteCapital();
-    for (int i = 0; i<qntd_centros_urbanos; i++) {
-        cout << centros_urbanos[i] << ": " << v[i] << endl;
+
+    grafo.definirBatalhoes();
+    vector<int> batalhoes = grafo.getBatalhoes();
+    cout << batalhoes.size() << endl;
+    for (auto it = batalhoes.begin(); it != batalhoes.end(); it++) {
+        cout << centros_urbanos[*it] << endl;
     }
-    
-    //cout << grafo.kosaraju() << endl;
 }

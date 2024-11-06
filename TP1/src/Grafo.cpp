@@ -18,6 +18,26 @@ void Grafo::definirCapital() {
     }
 }
 
+void Grafo::definirBatalhoes() {
+    kosaraju();
+    for (auto it = area_batalhoes.begin(); it != area_batalhoes.end(); it++) {
+        int distancia_min = -1;
+        int id_batalhao = -1;
+        for (auto j = (*it).begin(); j != (*it).end(); j++) {
+            if (distancia_min == -1) { 
+                distancia_min = distancias_ate_capital[*j]; 
+                id_batalhao = *j;
+            } else {
+                if (distancias_ate_capital[*j] < distancia_min) {
+                    distancia_min = distancias_ate_capital[*j];
+                    id_batalhao = *j;
+                }
+            }
+        }
+        if (distancia_min != 0) { batalhoes.push_back(id_batalhao); }
+    }
+}
+
 void Grafo::bfs(int origem, int* distancia_total) {
     queue<pair<int, int>> fila;
     vector<bool> visitados(this->num_vertices, false);
@@ -65,6 +85,7 @@ void Grafo::dfs_padrao(vector<list<int>> &grafo, int vertice, vector<bool> &visi
 
 void Grafo::dfs_transposto(vector<list<int>> &grafo, int vertice, vector<bool> &visitados) {
     visitados[vertice] = true;
+    area_batalhoes[area_batalhoes.size()-1].push_back(vertice);
     for (int i : grafo[vertice]) {
         if (!visitados[i]) { dfs_transposto(grafo, i, visitados); }
     }
@@ -81,10 +102,10 @@ vector<list<int>> Grafo::grafo_transposto() {
     return lista_adj_T;
 }
 
-int Grafo::kosaraju() {
+void Grafo::kosaraju() {
     stack<int> pilha;
     vector<bool> visitados(num_vertices, false);
-    int cfc = 0;
+
     for (int i = 0; i<num_vertices; i++) {
         if (!visitados[i]) { dfs_padrao(lista_adj, i, visitados, pilha); }
     }
@@ -97,20 +118,18 @@ int Grafo::kosaraju() {
         pilha.pop();
 
         if (!visitados[vertice]) {
+            area_batalhoes.push_back(vector<int>());
             dfs_transposto(transposto, vertice, visitados);
-            cfc++;
         }
     }
-    return cfc;
+    return;
 }
 
-int Grafo::getCapital() {
-    return capital;
-}
+int Grafo::getCapital() { return capital; }
 
-vector<int> Grafo::getDistanciasAteCapital() {
-    return distancias_ate_capital;
-}
+vector<int> Grafo::getBatalhoes() { return batalhoes; }
+
+vector<int> Grafo::getDistanciasAteCapital() { return distancias_ate_capital; }
 
 void Grafo::imprimirListaAdj() {
     for (int i = 0; i<this->num_vertices; i++) {
