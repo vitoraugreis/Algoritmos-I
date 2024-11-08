@@ -41,4 +41,6 @@ int main() {
     for (auto it = batalhoes.begin(); it != batalhoes.end(); it++) {
         cout << centros_urbanos[*it] << endl;
     }
+
+    grafo.definirRotas();
 }

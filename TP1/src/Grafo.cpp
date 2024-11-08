@@ -38,6 +38,54 @@ void Grafo::definirBatalhoes() {
     }
 }
 
+void Grafo::definirRotas() {
+    int index = 0;
+    for (auto it = area_batalhoes.begin(); it != area_batalhoes.end(); it++) {
+        unordered_set<int> vertices;
+        int batalhao;
+        for (auto jt = (*it).begin(); jt != (*it).end(); jt++) {
+            vertices.insert(*jt);
+        }
+
+        if (vertices.find(capital) != vertices.end()) {
+            if (vertices.size() > 1) {
+                batalhao = capital;
+            } else { continue; }
+        } else  if  (vertices.size() > 1){
+            batalhao = batalhoes[index];
+            index++;
+        } else { index++; continue; }
+
+        // revisar estrutura d dados
+        unordered_map<int, unordered_set<int>> subgrafo = gerarSubgrafo(vertices);
+        for (auto jt = subgrafo.begin(); jt != subgrafo.end(); jt++) {
+            if ((*jt).first == batalhao) { cout << "B"; }
+            cout << (*jt).first << " --> ";
+
+            for (auto kt = (*jt).second.begin(); kt != (*jt).second.end(); kt++) {
+                cout << *kt << ' ';
+            }
+            cout << endl;
+        }
+        cout << "-----------------" << endl;
+    }
+    
+}
+
+unordered_map<int, unordered_set<int>> Grafo::gerarSubgrafo(unordered_set<int> vertices) {
+    unordered_map<int, unordered_set<int>> subgrafo;
+    for (int i = 0; i<num_vertices; i++) {
+        if (vertices.find(i) == vertices.end()) { continue; }
+        subgrafo[i] = unordered_set<int>();
+        for (auto it = lista_adj[i].begin(); it != lista_adj[i].end(); it++) {
+            if (vertices.find(*it) == vertices.end()) { continue; }
+            subgrafo[i].insert(*it);
+        }
+    }
+
+    return subgrafo;
+}
+
 void Grafo::bfs(int origem, int* distancia_total) {
     queue<pair<int, int>> fila;
     vector<bool> visitados(this->num_vertices, false);

@@ -7,6 +7,8 @@
 #include <queue>
 #include <list>
 #include <stack>
+#include <unordered_set>
+#include <unordered_map>
 
 using namespace std;
 
@@ -17,6 +19,7 @@ class Grafo {
         void adicionarAresta(int origem, int destino);
         void definirCapital();
         void definirBatalhoes();
+        void definirRotas();
 
         int getCapital();
         vector<int> getBatalhoes();
@@ -28,13 +31,16 @@ class Grafo {
         void dfs_transposto(vector<list<int>> &grafo, int vertice, vector<bool> &visitados);
         void kosaraju();
         vector<list<int>> grafo_transposto();
+        unordered_map<int, unordered_set<int>> gerarSubgrafo(unordered_set<int> vertices);
 
         int num_vertices;
+        vector<list<int>> lista_adj;
+
         int capital;
         vector<int> distancias_ate_capital;
         vector<int> batalhoes;
         vector<vector<int>> area_batalhoes;
-        vector<list<int>> lista_adj;
+        vector<vector<int>> rotas;
 };
 
 #endif
