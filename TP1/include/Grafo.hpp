@@ -24,6 +24,7 @@ class Grafo {
         int getCapital();
         vector<int> getBatalhoes();
         vector<int> getDistanciasAteCapital();
+        vector<vector<int>> getRotas();
         void imprimirListaAdj();
     private:
         void bfs(int origem, int* distancia_total);
@@ -31,7 +32,9 @@ class Grafo {
         void dfs_transposto(vector<list<int>> &grafo, int vertice, vector<bool> &visitados);
         void kosaraju();
         vector<list<int>> grafo_transposto();
-        unordered_map<int, unordered_set<int>> gerarSubgrafo(unordered_set<int> vertices);
+        unordered_map<int, vector<int>> gerarSubgrafo(unordered_set<int> vertices);
+        unordered_map<int, int> verticesBalanco(unordered_map<int, vector<int>> &grafo);
+        vector<int> criarRota(unordered_map<int, vector<int>> &grafo, int batalao);
 
         int num_vertices;
         vector<list<int>> lista_adj;

@@ -43,4 +43,12 @@ int main() {
     }
 
     grafo.definirRotas();
+    vector<vector<int>> rotas = grafo.getRotas();
+
+    for (auto it = rotas.begin(); it != rotas.end(); it++) {
+        for (auto jt = (*it).begin(); jt != (*it).end(); jt++) {
+            cout << centros_urbanos[*jt] << ' ';
+        }
+        cout << endl;
+    }
 }

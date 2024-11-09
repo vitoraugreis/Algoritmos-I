@@ -39,6 +39,7 @@ void Grafo::definirBatalhoes() {
 }
 
 void Grafo::definirRotas() {
+    rotas = vector<vector<int>>();
     int index = 0;
     for (auto it = area_batalhoes.begin(); it != area_batalhoes.end(); it++) {
         unordered_set<int> vertices;
@@ -57,29 +58,64 @@ void Grafo::definirRotas() {
         } else { index++; continue; }
 
         // revisar estrutura d dados
-        unordered_map<int, unordered_set<int>> subgrafo = gerarSubgrafo(vertices);
-        for (auto jt = subgrafo.begin(); jt != subgrafo.end(); jt++) {
-            if ((*jt).first == batalhao) { cout << "B"; }
-            cout << (*jt).first << " --> ";
-
-            for (auto kt = (*jt).second.begin(); kt != (*jt).second.end(); kt++) {
-                cout << *kt << ' ';
-            }
-            cout << endl;
-        }
-        cout << "-----------------" << endl;
+        unordered_map<int, vector<int>> subgrafo = gerarSubgrafo(vertices);
+        unordered_map<int, int> balanco = verticesBalanco(subgrafo);
+        vector<int> rota_atual = criarRota(subgrafo, batalhao);
+        rotas.push_back(rota_atual);
     }
-    
 }
 
-unordered_map<int, unordered_set<int>> Grafo::gerarSubgrafo(unordered_set<int> vertices) {
-    unordered_map<int, unordered_set<int>> subgrafo;
+vector<int> Grafo::criarRota(unordered_map<int, vector<int>> &grafo, int batalao) {
+    unordered_map<int, int> qntd_aresta;
+    stack<int> caminho_atual;
+    vector<int> rota;
+    for (auto it = grafo.begin(); it != grafo.end(); it++) {
+        qntd_aresta[(*it).first] = int((*it).second.size());
+    }
+
+    caminho_atual.push(batalao);
+    int vertice_atual = batalao;
+
+    while (!caminho_atual.empty()) {
+        if (qntd_aresta[vertice_atual]) {
+            caminho_atual.push(vertice_atual);
+            int proximo_vertice = grafo[vertice_atual].back();
+            qntd_aresta[vertice_atual]--;
+            grafo[vertice_atual].pop_back();
+            vertice_atual = proximo_vertice;
+        } else {
+            rota.push_back(vertice_atual);
+            vertice_atual = caminho_atual.top();
+            caminho_atual.pop();
+        }
+    }
+    return rota;
+}
+
+unordered_map<int, int> Grafo::verticesBalanco(unordered_map<int, vector<int>> &grafo) {
+    unordered_map<int, int> balanco;
+    for (auto it = grafo.begin(); it != grafo.end(); it++) {
+        balanco.insert(make_pair((*it).first, 0));
+    }
+
+    for (auto it = grafo.begin(); it != grafo.end(); it++) {
+        for (auto jt = (*it).second.begin(); jt != (*it).second.end(); jt++) {
+            balanco[(*it).first]++;
+            balanco[*jt]--;
+        }
+    }
+
+    return balanco;
+}
+
+unordered_map<int, vector<int>> Grafo::gerarSubgrafo(unordered_set<int> vertices) {
+    unordered_map<int, vector<int>> subgrafo;
     for (int i = 0; i<num_vertices; i++) {
         if (vertices.find(i) == vertices.end()) { continue; }
-        subgrafo[i] = unordered_set<int>();
+        subgrafo[i] = vector<int>();
         for (auto it = lista_adj[i].begin(); it != lista_adj[i].end(); it++) {
             if (vertices.find(*it) == vertices.end()) { continue; }
-            subgrafo[i].insert(*it);
+            subgrafo[i].push_back(*it);
         }
     }
 
@@ -178,6 +214,8 @@ int Grafo::getCapital() { return capital; }
 vector<int> Grafo::getBatalhoes() { return batalhoes; }
 
 vector<int> Grafo::getDistanciasAteCapital() { return distancias_ate_capital; }
+
+vector<vector<int>> Grafo::getRotas() { return rotas; }
 
 void Grafo::imprimirListaAdj() {
     for (int i = 0; i<this->num_vertices; i++) {
