@@ -39,6 +39,7 @@ class Grafo {
         void transformarEuleriano(unordered_map<int, vector<int>> &grafo, unordered_map<int, int> &balanco);
         int bfsRotas(unordered_map<int, vector<int>> &grafo, int origem, int destino);
         vector<pair<int,int>> hungaro(vector<vector<int>> &matriz);
+        vector<int> bfsCaminho(unordered_map<int, vector<int>> &grafo, int origem, int destino);
 
         int num_vertices;
         vector<list<int>> lista_adj;

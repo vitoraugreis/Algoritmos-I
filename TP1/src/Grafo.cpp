@@ -71,6 +71,9 @@ void Grafo::definirRotas() {
         }
 
         transformarEuleriano(subgrafo, balanco);
+        vector<int> rota_atual = criarRota(subgrafo, batalhao);
+        rotas.push_back(rota_atual);
+
     }
 }
 
@@ -100,9 +103,14 @@ void Grafo::transformarEuleriano(unordered_map<int, vector<int>> &grafo, unorder
         }
     }
     vector<pair<int, int>> hung = hungaro(distancias);
+
     for (auto it = hung.begin(); it != hung.end(); it++) {
-        cout << (*it).first << ' ' << (*it).second << endl;
+        vector<int> caminho = bfsCaminho(grafo, negativos[(*it).first], positivos[(*it).second]);
+        for (int i = 1; i<int(caminho.size()); i++) {
+            grafo[caminho[i-1]].push_back(caminho[i]);
+        }
     }
+
     return;
 }
 
@@ -201,6 +209,41 @@ vector<pair<int, int>> Grafo::hungaro(vector<vector<int>> &matriz) {
     return emparelhamento;
 }
 
+vector<int> Grafo::bfsCaminho(unordered_map<int, vector<int>> &grafo, int origem, int destino) {
+    vector<bool> visitados(grafo.size(), false);
+    unordered_map<int, int> antecessor;
+    queue<int> fila;
+
+    fila.push(origem);
+    visitados[origem] = true;
+    antecessor[origem] = -1;
+
+    while (!fila.empty()) {
+        int atual = fila.front();
+        fila.pop();
+
+        if (atual == destino) {
+            vector<int> caminho_inv, caminho;
+            for (int v = destino; v != -1; v = antecessor[v]) {
+                caminho_inv.push_back(v);
+            }
+            for (auto it = caminho_inv.rbegin(); it != caminho_inv.rend(); it++) {
+                caminho.push_back(*it);
+            }
+            return caminho;
+        }
+
+        for (int vizinho : grafo[atual]) {
+            if (!visitados[vizinho]) {
+                fila.push(vizinho);
+                visitados[vizinho] = true;
+                antecessor[vizinho] = atual;
+            }
+        }
+    }
+    return {};
+}
+
 int Grafo::bfsRotas(unordered_map<int, vector<int>> &grafo, int origem, int destino) {
     queue<pair<int, int>> fila;
     vector<bool> visitados(grafo.size(), false);
@@ -248,6 +291,7 @@ vector<int> Grafo::criarRota(unordered_map<int, vector<int>> &grafo, int batalao
             caminho_atual.pop();
         }
     }
+    rota.pop_back();
     return rota;
 }
 
