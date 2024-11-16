@@ -57,12 +57,171 @@ void Grafo::definirRotas() {
             index++;
         } else { index++; continue; }
 
-        // revisar estrutura d dados
         unordered_map<int, vector<int>> subgrafo = gerarSubgrafo(vertices);
         unordered_map<int, int> balanco = verticesBalanco(subgrafo);
-        vector<int> rota_atual = criarRota(subgrafo, batalhao);
-        rotas.push_back(rota_atual);
+
+        bool eh_euleriano = true;
+        for (auto it = balanco.begin(); it != balanco.end(); it++) {
+            if ((*it).second != 0) { eh_euleriano = false; break; }
+        }
+        if (eh_euleriano) {
+            vector<int> rota_atual = criarRota(subgrafo, batalhao);
+            rotas.push_back(rota_atual);
+            continue;
+        }
+
+        transformarEuleriano(subgrafo, balanco);
     }
+}
+
+void Grafo::transformarEuleriano(unordered_map<int, vector<int>> &grafo, unordered_map<int, int> &balanco) {
+    vector<int> positivos;
+    vector<int> negativos;
+
+    for (auto it = balanco.begin(); it != balanco.end(); it++) {
+        if ((*it).second > 0) {
+            while ((*it).second != 0) {
+                positivos.push_back((*it).first);
+                (*it).second--;
+            }
+        } else if ((*it).second < 0) {
+            while ((*it).second != 0) {
+                negativos.push_back((*it).first);
+                (*it).second++;
+            }
+        }
+    }
+
+    vector<vector<int>> distancias;
+    for (int i = 0; i<int(positivos.size()); i++) {
+        distancias.push_back(vector<int>());
+        for (int j = 0; j<int(positivos.size()); j++) {
+            distancias[i].push_back(bfsRotas(grafo, negativos[i], positivos[j]));
+        }
+    }
+    vector<pair<int, int>> hung = hungaro(distancias);
+    for (auto it = hung.begin(); it != hung.end(); it++) {
+        cout << (*it).first << ' ' << (*it).second << endl;
+    }
+    return;
+}
+
+vector<pair<int, int>> Grafo::hungaro(vector<vector<int>> &matriz) {
+    int dim = int(matriz.size());
+    for (int i = 0; i<dim; i++) {
+        int min = matriz[i][0];
+        for (int j = 1; j<dim; j++) {
+            if (matriz[i][j] < min) { min = matriz[i][j]; }
+        }
+        for (int j = 0; j<dim; j++) { matriz[i][j] -= min; }
+    }
+
+    for (int j = 0; j<dim; j++) {
+        int min = matriz[0][j];
+        for (int i = 1; i<dim; i++) {
+            if (matriz[i][j] < min) { min = matriz[i][j]; }
+        }
+        for (int i = 0; i<dim; i++) { matriz[i][j] -= min; }
+    }
+
+    vector<bool> linhas_cobertas(dim, false);
+    vector<bool> colunas_cobertas(dim, false);
+
+    for (int i = 0; i<dim; i++) {
+        for (int j = 0; j<dim; j++) {
+            if (matriz[i][j] == 0 && !linhas_cobertas[i] && !colunas_cobertas[j]) {
+                linhas_cobertas[i] = true;
+                colunas_cobertas[j] = true;
+                break;
+            }
+        }
+    }
+
+    bool concluido = false;
+    while (!concluido) {
+        concluido = true;
+        for (int i = 0; i<dim; i++) {
+            if (linhas_cobertas[i]) {
+                for (int j = 0; j<dim; j++) {
+                    if (matriz[i][j] == 0 && !colunas_cobertas[j]) {
+                        colunas_cobertas[j] = true;
+                        concluido = false;
+                    }
+                }
+            }
+        }
+
+        for (int j = 0; j<dim; j++) {
+            if (colunas_cobertas[j]) {
+                for (int i = 0; i<dim; i++) {
+                    if (matriz[i][j] == 0 && !linhas_cobertas[i]) {
+                        linhas_cobertas[i] = true;
+                        concluido = false;
+                    }
+                }
+            }
+        }
+    }
+
+    int min = 10000000;
+    bool foi_descoberto = false;
+
+    for (int i = 0; i<dim; i++) {
+        for (int j = 0; j<dim; j++) {
+            if (!linhas_cobertas[i] && !colunas_cobertas[j] && matriz[i][j] < min) {
+                min = matriz[i][j];
+                foi_descoberto = true;
+            }
+        }
+    }
+
+    if (foi_descoberto) {
+        for (int i = 0; i<dim; i++) {
+            for (int j = 0; j<dim; j++) {
+                if (!linhas_cobertas[i] && !colunas_cobertas[j]) { matriz[i][j] -= min; }
+                if (linhas_cobertas[i] && colunas_cobertas[j]) { matriz[i][j] += min; }
+            }
+        }
+    }
+
+    vector<pair<int, int>> emparelhamento;
+    vector<bool> linhas_emparelhada(dim, false), colunas_emparelhadas(dim, false);
+
+    for (int i = 0; i<dim; i++) {
+        for (int j = 0; j<dim; j++) {
+            if (matriz[i][j] == 0 && !linhas_emparelhada[i] && !linhas_emparelhada[j]) {
+                emparelhamento.push_back(make_pair(i, j));
+                linhas_emparelhada[i] = true;
+                colunas_emparelhadas[j] = true;
+                break;
+            }
+        }
+    }
+
+    return emparelhamento;
+}
+
+int Grafo::bfsRotas(unordered_map<int, vector<int>> &grafo, int origem, int destino) {
+    queue<pair<int, int>> fila;
+    vector<bool> visitados(grafo.size(), false);
+
+    visitados[origem] = true;
+    fila.push(make_pair(origem, 0));
+
+    while (!fila.empty()) {
+        int vertice_atual = fila.front().first;
+        int distancia_atual = fila.front().second;
+        fila.pop();
+
+        for (int i : grafo[vertice_atual]) {
+            if (!visitados[i]) {
+                if (i == destino) { return distancia_atual + 1; }
+                visitados[i] = true;
+                fila.push(make_pair(i, distancia_atual+1));
+            }
+        }
+    }
+    return -1;
 }
 
 vector<int> Grafo::criarRota(unordered_map<int, vector<int>> &grafo, int batalao) {
