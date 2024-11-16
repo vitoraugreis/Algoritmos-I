@@ -28,7 +28,7 @@ class Grafo {
         void imprimirListaAdj();
 
     private:
-        void bfs(int origem, int* distancia_total);
+        void bfsCapital(int origem, int* distancia_total);
         void dfs_padrao(vector<list<int>> &grafo, int vertice, vector<bool> &visitados, stack<int> &pilha);
         void dfs_transposto(vector<list<int>> &grafo, int vertice, vector<bool> &visitados);
         void kosaraju();
@@ -45,9 +45,9 @@ class Grafo {
         vector<list<int>> lista_adj;
 
         int capital;
-        vector<int> distancias_ate_capital;
+        vector<int> distancias_ate_capital; // Distancia de todos os demais vértices até a capital.
         vector<int> batalhoes;
-        vector<vector<int>> area_batalhoes;
+        vector<vector<int>> area_batalhoes; // Áreas em que cada batalhão é responsável.
         vector<vector<int>> rotas;
 };
 
