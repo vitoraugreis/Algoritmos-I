@@ -41,10 +41,12 @@ class Grafo {
         void adicionarAresta(int comeco, int destino, int capacidade);
         int definirEnergiaTotal();
         int definirEnergiaNaoAtendida();
+        int definirEnergiaPerdida();
         void imprimirGrafo();
     private:
         int num_vertices;
         int energia_total;
+        unordered_map<int, int> geracao_por_gerador;
         unordered_map<int, Vertice> vertices;
         unordered_map<int, list<Aresta>> lista_adj;
 

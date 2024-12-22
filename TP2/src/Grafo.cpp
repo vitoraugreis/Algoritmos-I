@@ -53,22 +53,22 @@ void Grafo::imprimirGrafo() {
 }
 
 int Grafo::definirEnergiaTotal() {
-    unordered_map<int, int> geradores;
     for (auto it = lista_adj.begin(); it != lista_adj.end(); it++) {
-        if (vertices.at(it->first).demanda == 0) { geradores[it->first] = 0; }
+        if (vertices.at(it->first).demanda == 0) { geracao_por_gerador[it->first] = 0; }
     }
-    for (auto it = geradores.begin(); it != geradores.end(); it++) {
+    for (auto it = geracao_por_gerador.begin(); it != geracao_por_gerador.end(); it++) {
         unordered_map<int, list<Aresta>> grafo_residual = lista_adj;
         it->second = fordFulkerson(grafo_residual, it->first, -1);
     }
 
-    if (geradores.size() == 1) { 
-        return geradores.begin()->second; 
+    if (geracao_por_gerador.size() == 1) { 
+        energia_total = geracao_por_gerador.begin()->second;
+        return energia_total;
     }
 
     unordered_map<int, list<Aresta>> grafo_residual = lista_adj;
     grafo_residual[0] = list<Aresta>();
-    for (auto it = geradores.begin(); it != geradores.end(); it++) {
+    for (auto it = geracao_por_gerador.begin(); it != geracao_por_gerador.end(); it++) {
         grafo_residual[0].push_back(Aresta(it->first, it->second));
     }
     
@@ -84,6 +84,14 @@ int Grafo::definirEnergiaNaoAtendida() {
     }
     
     return (demanda_total - energia_total) > 0 ? (demanda_total - energia_total) : 0;
+}
+
+int Grafo::definirEnergiaPerdida() {
+    int energia_gerada = 0;
+    for (auto it : geracao_por_gerador) {
+        for (auto jt : lista_adj[it.first]) { energia_gerada += jt.capacidade; }
+    }
+    return energia_gerada - energia_total;
 }
 
 bool Grafo::bfs(unordered_map<int, list<Aresta>> &grafo, int origem, int destino, unordered_map<int, int> &caminho) {

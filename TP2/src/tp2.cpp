@@ -23,5 +23,6 @@ int main() {
 
     cout << siderurgica.definirEnergiaTotal() << endl;
     cout << siderurgica.definirEnergiaNaoAtendida() << endl;
+    cout << siderurgica.definirEnergiaPerdida() << endl;
     return 0;
 }
