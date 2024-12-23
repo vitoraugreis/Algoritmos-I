@@ -9,12 +9,14 @@ int main() {
 
     Grafo siderurgica(v);
 
+    // Leitura dos vértices.
     for (int i = 0; i<v; i++) {
         int id, demanda;
         cin >> id >> demanda;
-        siderurgica.adicionarVertice(id, demanda);
+        siderurgica.adicionarVertice(id, demanda, i);
     }
 
+    // Leitura das arestas.
     for (int i = 0; i<e; i++) {
         int origem, destino, capacidade;
         cin >> origem >> destino >> capacidade;
@@ -24,5 +26,6 @@ int main() {
     cout << siderurgica.definirEnergiaTotal() << endl;
     cout << siderurgica.definirEnergiaNaoAtendida() << endl;
     cout << siderurgica.definirEnergiaPerdida() << endl;
+    siderurgica.imprimirConexoesCriticas();
     return 0;
 }

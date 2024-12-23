@@ -1,102 +1,84 @@
 #include "Grafo.hpp"
 
-Vertice::Vertice(int id, int demanda) {
-    this->id = id;
-    this->demanda = demanda;
-}
-
-Vertice::~Vertice() {}
-
-void Vertice::imprimirVertice() {
-    cout << id << "(" << demanda << ")";
-}
-
-Aresta::Aresta(int destino, int capacidade) {
-    this->destino = destino;
-    this->capacidade = capacidade;
-}
-
-Aresta::~Aresta() {}
-
-void Aresta::imprimirAresta() {
-    cout << destino << "(" << capacidade << ")";
-}
-
+// Construtor.
 Grafo::Grafo(int num_vertices) {
     this->num_vertices = num_vertices;
-    vertices = unordered_map<int, Vertice>();
-    lista_adj = unordered_map<int, list<Aresta>>();
     energia_total = 0;
+    matriz_adj = vector<vector<int>>(num_vertices, vector<int>(num_vertices, 0));
+    grafo_residual = vector<vector<int>>(num_vertices+2, vector<int>(num_vertices+2, 0));
+    unordered_map<int, pair<int, int>> vertices;
+    super_gerador_id = num_vertices;
+    super_sumidouro_id = num_vertices+1;
 }
 
+// Destrutor.
 Grafo::~Grafo() {}
 
-void::Grafo::adicionarVertice(int id, int demanda) {
-    vertices.insert({id, Vertice(id, demanda)});
-    lista_adj.insert({id, list<Aresta>()});
+// Adiciona um vértice ao grafo com seu ID, demanda e índice na matriz de adjacência.
+void Grafo::adicionarVertice(int id, int demanda, int index) {
+    vertices[id] = make_pair(index, demanda);
+    // Caso sua demanda seja 0, significa que é um gerador.
+    // Se é um gerador, deve haver uma conexão entre ele e o super gerador.
+    // Caso não seja gerador, deve haver uma conexão entre ele e o super sumidouro.
+    if (demanda == 0) {
+        grafo_residual[super_gerador_id][vertices[id].first] = INF;
+        geradores.push_back(id);
+    } else { grafo_residual[vertices[id].first][super_sumidouro_id] = demanda; }
 }
 
+// Adiciona uma aresta entre dois vértices no grafo original e no grafo residual.
 void Grafo::adicionarAresta(int origem, int destino, int capacidade) {
-    lista_adj[origem].push_back(Aresta(destino, capacidade));
+    int origem_idx = vertices[origem].first;
+    int destino_idx = vertices[destino].first;
+
+    matriz_adj[origem_idx][destino_idx] = capacidade;
+    grafo_residual[origem_idx][destino_idx] = capacidade;
 }
 
-void Grafo::imprimirGrafo() {
-    for (auto it = lista_adj.begin(); it != lista_adj.end(); it++) {
-        vertices.at(it->first).imprimirVertice();
-        cout <<  " --> ";
-        for (auto jt = it->second.begin(); jt != it->second.end(); jt++) {
-            jt->imprimirAresta();
-            cout << ' ';
-        }
-        cout << endl;
-    }
-}
-
+// Define Energia Total.
 int Grafo::definirEnergiaTotal() {
-    for (auto it = lista_adj.begin(); it != lista_adj.end(); it++) {
-        if (vertices.at(it->first).demanda == 0) { geracao_por_gerador[it->first] = 0; }
-    }
-    for (auto it = geracao_por_gerador.begin(); it != geracao_por_gerador.end(); it++) {
-        unordered_map<int, list<Aresta>> grafo_residual = lista_adj;
-        it->second = fordFulkerson(grafo_residual, it->first, -1);
-    }
-
-    if (geracao_por_gerador.size() == 1) { 
-        energia_total = geracao_por_gerador.begin()->second;
-        return energia_total;
-    }
-
-    unordered_map<int, list<Aresta>> grafo_residual = lista_adj;
-    grafo_residual[0] = list<Aresta>();
-    for (auto it = geracao_por_gerador.begin(); it != geracao_por_gerador.end(); it++) {
-        grafo_residual[0].push_back(Aresta(it->first, it->second));
-    }
-    
-    energia_total = fordFulkerson(grafo_residual, 0, -1);
-
+    energia_total = fordFulkerson(super_gerador_id, super_sumidouro_id);
+    identificarArestasSaturadas();
     return energia_total;
 }
 
+// Define Energia não atendida
 int Grafo::definirEnergiaNaoAtendida() {
     int demanda_total = 0;
     for (auto it = vertices.begin(); it != vertices.end(); it++) {
-        demanda_total += it->second.demanda;
+        demanda_total += it->second.second;
     }
     
     return (demanda_total - energia_total) > 0 ? (demanda_total - energia_total) : 0;
 }
 
+// Define Energia Perdida.
 int Grafo::definirEnergiaPerdida() {
     int energia_gerada = 0;
-    for (auto it : geracao_por_gerador) {
-        for (auto jt : lista_adj[it.first]) { energia_gerada += jt.capacidade; }
+
+    for (auto it = geradores.begin(); it != geradores.end(); it++) {
+        int gerador_idx = vertices[*it].first;
+        for (int capacidade : matriz_adj[gerador_idx]) {
+            energia_gerada += capacidade;
+        }
     }
     return energia_gerada - energia_total;
 }
 
-bool Grafo::bfs(unordered_map<int, list<Aresta>> &grafo, int origem, int destino, unordered_map<int, int> &caminho) {
-    unordered_map<int, bool> visitado;
-    for (auto it = grafo.begin(); it != grafo.end(); it++) { visitado[it->first] = false; }
+// Impressão de conexões críticas, em ordem decrescente.
+void Grafo::imprimirConexoesCriticas() {
+    cout << arestas_saturadas.size() << endl;
+
+    while (!arestas_saturadas.empty()) {
+        auto aresta = arestas_saturadas.top();
+        cout << get<1>(aresta) << ' ' << get<2>(aresta) << ' ' << get<0>(aresta) << endl;
+        arestas_saturadas.pop();
+    }
+}
+
+// Busca em largura para o algoritmo de Ford-Fulkerson.
+bool Grafo::bfs(int origem, int destino, unordered_map<int, int>& caminho) {
+    vector<bool> visitado(num_vertices+2, false);
     queue<int> fila;
     fila.push(origem);
     visitado[origem] = true;
@@ -106,57 +88,58 @@ bool Grafo::bfs(unordered_map<int, list<Aresta>> &grafo, int origem, int destino
         int atual = fila.front();
         fila.pop();
 
-        for (auto it = grafo[atual].begin(); it != grafo[atual].end(); it++) {
-            if (visitado[it->destino] == false && it->capacidade > 0) {
-                if (it->destino == destino) {
-                    caminho[it->destino] = atual;
+        for (int v = 0; v < num_vertices+2; v++) {
+            if (!visitado[v] && grafo_residual[atual][v] > 0) {
+                if (v == destino) {
+                    caminho[v] = atual;
                     return true;
                 }
-                fila.push(it->destino);
-                caminho[it->destino] = atual;
-                visitado[it->destino] = true;
+                fila.push(v);
+                caminho[v] = atual;
+                visitado[v] = true;
             }
         }
     }
     return false;
 }
 
-int Grafo::fordFulkerson(unordered_map<int, list<Aresta>> &grafo_residual, int origem, int destino) {
+int Grafo::fordFulkerson(int origem, int destino) {
     int u, v;
-    for (auto it = grafo_residual.begin(); it != grafo_residual.end(); it++) {
-        if (it->first == 0) { continue; }
-        int demanda = vertices.at(it->first).demanda;
-        if (demanda > 0) { it->second.push_back({Aresta(-1, demanda)}); }
-    }
     int fluxo_max = 0;
     unordered_map<int, int> caminho;
 
-    while (bfs(grafo_residual, origem, destino, caminho)) {
+    // Verifica se há caminho aumentante restante no grafo.
+    while (bfs(origem, destino, caminho)) {
         int fluxo = INF;
+        // Calculo o fluxo do caminho atual.
         for (v = destino; v != origem; v = caminho[v]) {
             u = caminho[v];
-            for (auto it = grafo_residual[u].begin(); it != grafo_residual[u].end(); it++) {
-                if (it->destino == v) {
-                    fluxo = min(it->capacidade, fluxo);
-                    break;
-                }
-            }
+            fluxo = min(fluxo, grafo_residual[u][v]);
         }
-
+        // Reduz da capacidade de cada aresta do caminho o fluxo calculado.
         for (v = destino; v != origem; v = caminho[v]) {
             u = caminho[v];
-            for (auto it = grafo_residual[u].begin(); it != grafo_residual[u].end(); it++) {
-                if (it->destino == v) {
-                    it->capacidade -= fluxo;
-                }
-            }
-            for (auto it = grafo_residual[v].begin(); it != grafo_residual[v].end(); it++) {
-                if (it->destino == u) {
-                    it->capacidade += fluxo;
-                }
-            }
+            grafo_residual[u][v] -= fluxo;
+            grafo_residual[v][u] += fluxo;
         }
         fluxo_max += fluxo;
     }
+
     return fluxo_max;
+}
+
+// Identifica as arestas saturadas.
+void Grafo::identificarArestasSaturadas() {
+    for (auto it = vertices.begin(); it != vertices.end(); it++) {
+        for (auto jt = vertices.begin(); jt != vertices.end(); jt++) {
+            int origem = it->second.first;
+            int destino = jt->second.first;
+            if (grafo_residual[origem][destino] == 0) {
+                if (matriz_adj[origem][destino] > 0) {
+                    arestas_saturadas.push(make_tuple(
+                        matriz_adj[origem][destino], it->first, jt->first));
+                }
+            }
+        }
+    }
 }
