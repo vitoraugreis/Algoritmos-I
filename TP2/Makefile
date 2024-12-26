@@ -28,9 +28,8 @@ $(TARGET): $(OBJS)
 
 all: $(TARGET)
 
-run: $(TARGET)
-	clear
-	./$(TARGET) < testCase.txt
+test: $(TARGET)
+	python3 runTests.py
 
 clear:
 	rm $(OBJ_DIR)/* $(TARGET)
